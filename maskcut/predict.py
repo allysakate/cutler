@@ -5,20 +5,18 @@ wget https://dl.fbaipublicfiles.com/dino/dino_deitsmall8_300ep_pretrain/dino_dei
 """
 
 import sys
-
-sys.path.append("maskcut")
 import numpy as np
 import PIL.Image as Image
 import torch
 from scipy import ndimage
 from colormap import random_color
 
-import dino
-from third_party.TokenCut.unsupervised_saliency_detection import metric
-from crf import densecrf
-from maskcut import maskcut
-
-from cog import BasePredictor, Input, Path
+sys.path.append("maskcut")
+import dino  # noqa
+from third_party.TokenCut.unsupervised_saliency_detection import metric  # noqa
+from crf import densecrf  # noqa
+from maskcut import maskcut  # noqa
+from cog import BasePredictor, Input, Path  # noqa
 
 
 class Predictor(BasePredictor):
@@ -57,7 +55,7 @@ class Predictor(BasePredictor):
         model: str = Input(
             description="Choose the model architecture",
             default="base",
-            choices=["small", "base"]
+            choices=["small", "base"],
         ),
         n_pseudo_masks: int = Input(
             description="The maximum number of pseudo-masks per image",
@@ -86,8 +84,8 @@ class Predictor(BasePredictor):
             cpu=False,
         )
 
-        I = Image.open(str(image)).convert("RGB")
-        width, height = I.size
+        Img = Image.open(str(image)).convert("RGB")
+        width, height = Img.size
         pseudo_mask_list = []
         for idx, bipartition in enumerate(bipartitions):
             # post-process pesudo-masks with CRF
@@ -114,12 +112,12 @@ class Predictor(BasePredictor):
             pseudo_mask[pseudo_mask <= thresh] = lower
             pseudo_mask_list.append(pseudo_mask)
 
-        out = np.array(I)
+        out = np.array(Img)
         for pseudo_mask in pseudo_mask_list:
 
             out = vis_mask(out, pseudo_mask, random_color(rgb=True))
 
-        output_path = f"/tmp/out.png"
+        output_path = "/tmp/out.png"
 
         out.save(str(output_path))
 

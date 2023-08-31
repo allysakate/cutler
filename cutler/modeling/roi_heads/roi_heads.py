@@ -19,7 +19,9 @@ from detectron2.utils.registry import Registry
 from detectron2.modeling.backbone.resnet import BottleneckBlock, ResNet
 from detectron2.modeling.matcher import Matcher
 from detectron2.modeling.poolers import ROIPooler
-from detectron2.modeling.proposal_generator.proposal_utils import add_ground_truth_to_proposals
+from detectron2.modeling.proposal_generator.proposal_utils import (
+    add_ground_truth_to_proposals,
+)
 from detectron2.modeling.sampling import subsample_labels
 from detectron2.modeling.roi_heads.box_head import build_box_head
 from .fast_rcnn import FastRCNNOutputLayers
@@ -30,7 +32,7 @@ from detectron2.modeling.box_regression import Box2BoxTransform
 import torch.nn.functional as F
 from colored import fg
 
-blue, red = fg('blue'), fg('red')
+blue, red = fg("blue"), fg("red")
 
 ROI_HEADS_REGISTRY = Registry("ROI_HEADS")
 ROI_HEADS_REGISTRY.__doc__ = """
@@ -85,7 +87,9 @@ def select_foreground_proposals(
     return fg_proposals, fg_selection_masks
 
 
-def select_proposals_with_visible_keypoints(proposals: List[Instances]) -> List[Instances]:
+def select_proposals_with_visible_keypoints(
+    proposals: List[Instances],
+) -> List[Instances]:
     """
     Args:
         proposals (list[Instances]): a list of N Instances, where N is the
@@ -113,7 +117,9 @@ def select_proposals_with_visible_keypoints(proposals: List[Instances]) -> List[
         # #fg x K x 3
         vis_mask = gt_keypoints[:, :, 2] >= 1
         xs, ys = gt_keypoints[:, :, 0], gt_keypoints[:, :, 1]
-        proposal_boxes = proposals_per_image.proposal_boxes.tensor.unsqueeze(dim=1)  # #fg x 1 x 4
+        proposal_boxes = proposals_per_image.proposal_boxes.tensor.unsqueeze(
+            dim=1
+        )  # #fg x 1 x 4
         kp_in_box = (
             (xs >= proposal_boxes[:, :, 0])
             & (xs <= proposal_boxes[:, :, 2])
@@ -189,7 +195,10 @@ class ROIHeads(torch.nn.Module):
         }
 
     def _sample_proposals(
-        self, matched_idxs: torch.Tensor, matched_labels: torch.Tensor, gt_classes: torch.Tensor
+        self,
+        matched_idxs: torch.Tensor,
+        matched_labels: torch.Tensor,
+        gt_classes: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Based on the matching between N proposals and M groundtruth,
@@ -220,7 +229,10 @@ class ROIHeads(torch.nn.Module):
             gt_classes = torch.zeros_like(matched_idxs) + self.num_classes
 
         sampled_fg_idxs, sampled_bg_idxs = subsample_labels(
-            gt_classes, self.batch_size_per_image, self.positive_fraction, self.num_classes
+            gt_classes,
+            self.batch_size_per_image,
+            self.positive_fraction,
+            self.num_classes,
         )
 
         sampled_idxs = torch.cat([sampled_fg_idxs, sampled_bg_idxs], dim=0)
@@ -294,7 +306,9 @@ class ROIHeads(torch.nn.Module):
                 # (by foreground/background, or number of keypoints in the image, etc)
                 # so we essentially index the data twice.
                 for (trg_name, trg_value) in targets_per_image.get_fields().items():
-                    if trg_name.startswith("gt_") and not proposals_per_image.has(trg_name):
+                    if trg_name.startswith("gt_") and not proposals_per_image.has(
+                        trg_name
+                    ):
                         proposals_per_image.set(trg_name, trg_value[sampled_targets])
             # If no GT is given in the image, we don't know what a dummy gt value can be.
             # Therefore the returned proposals won't have any gt_* fields, except for a
@@ -431,7 +445,11 @@ class Res5ROIHeads(ROIHeads):
         if mask_on:
             ret["mask_head"] = build_mask_head(
                 cfg,
-                ShapeSpec(channels=out_channels, width=pooler_resolution, height=pooler_resolution),
+                ShapeSpec(
+                    channels=out_channels,
+                    width=pooler_resolution,
+                    height=pooler_resolution,
+                ),
             )
         return ret
 
@@ -530,7 +548,9 @@ class Res5ROIHeads(ROIHeads):
 
         if self.mask_on:
             feature_list = [features[f] for f in self.in_features]
-            x = self._shared_roi_transform(feature_list, [x.pred_boxes for x in instances])
+            x = self._shared_roi_transform(
+                feature_list, [x.pred_boxes for x in instances]
+            )
             return self.mask_head(x, instances)
         else:
             return instances
@@ -564,7 +584,7 @@ class CustomStandardROIHeads(ROIHeads):
         keypoint_pooler: Optional[ROIPooler] = None,
         keypoint_head: Optional[nn.Module] = None,
         train_on_pred_boxes: bool = False,
-        box2box_transform = Box2BoxTransform,
+        box2box_transform=Box2BoxTransform,
         use_droploss: bool = False,
         droploss_iou_thresh: float = 1.0,
         **kwargs,
@@ -607,7 +627,7 @@ class CustomStandardROIHeads(ROIHeads):
             self.keypoint_in_features = keypoint_in_features
             self.keypoint_pooler = keypoint_pooler
             self.keypoint_head = keypoint_head
-        
+
         self.train_on_pred_boxes = train_on_pred_boxes
         self.use_droploss = use_droploss
         self.box2box_transform = box2box_transform
@@ -623,9 +643,11 @@ class CustomStandardROIHeads(ROIHeads):
         # We test for this with ismethod which only returns True for bound methods of cls.
         # Such subclasses will need to handle calling their overridden _init_*_head methods.
         if cfg.MODEL.ROI_HEADS.USE_DROPLOSS:
-            ret['use_droploss'] = True
-            ret['droploss_iou_thresh'] = cfg.MODEL.ROI_HEADS.DROPLOSS_IOU_THRESH
-            ret['box2box_transform'] = Box2BoxTransform(weights=cfg.MODEL.ROI_BOX_HEAD.BBOX_REG_WEIGHTS)
+            ret["use_droploss"] = True
+            ret["droploss_iou_thresh"] = cfg.MODEL.ROI_HEADS.DROPLOSS_IOU_THRESH
+            ret["box2box_transform"] = Box2BoxTransform(
+                weights=cfg.MODEL.ROI_BOX_HEAD.BBOX_REG_WEIGHTS
+            )
         if inspect.ismethod(cls._init_box_head):
             ret.update(cls._init_box_head(cfg, input_shape))
         if inspect.ismethod(cls._init_mask_head):
@@ -661,7 +683,10 @@ class CustomStandardROIHeads(ROIHeads):
         # They are used together so the "box predictor" layers should be part of the "box head".
         # New subclasses of ROIHeads do not need "box predictor"s.
         box_head = build_box_head(
-            cfg, ShapeSpec(channels=in_channels, height=pooler_resolution, width=pooler_resolution)
+            cfg,
+            ShapeSpec(
+                channels=in_channels, height=pooler_resolution, width=pooler_resolution
+            ),
         )
         box_predictor = FastRCNNOutputLayers(cfg, box_head.output_shape)
         return {
@@ -797,7 +822,9 @@ class CustomStandardROIHeads(ROIHeads):
         instances = self._forward_keypoint(features, instances)
         return instances
 
-    def _forward_box(self, features: Dict[str, torch.Tensor], proposals: List[Instances]):
+    def _forward_box(
+        self, features: Dict[str, torch.Tensor], proposals: List[Instances]
+    ):
         """
         Forward logic of the box prediction branch. If `self.train_on_pred_boxes is True`,
             the function puts predicted boxes in the `proposal_boxes` field of `proposals` argument.
@@ -815,17 +842,26 @@ class CustomStandardROIHeads(ROIHeads):
             In inference, a list of `Instances`, the predicted instances.
         """
         features = [features[f] for f in self.box_in_features]
-        box_features = self.box_pooler(features, [x.proposal_boxes for x in proposals]) # torch.Size([512 * batch_size, 256, 7, 7])
-        box_features = self.box_head(box_features) # torch.Size([512 * batch_size, 1024])
-        predictions = self.box_predictor(box_features) # [torch.Size([512 * batch_size, 2]), torch.Size([512 * batch_size, 4])]
+        box_features = self.box_pooler(
+            features, [x.proposal_boxes for x in proposals]
+        )  # torch.Size([512 * batch_size, 256, 7, 7])
+        box_features = self.box_head(
+            box_features
+        )  # torch.Size([512 * batch_size, 1024])
+        predictions = self.box_predictor(
+            box_features
+        )  # [torch.Size([512 * batch_size, 2]), torch.Size([512 * batch_size, 4])]
 
         no_gt_found = False
         if self.use_droploss and self.training:
             # the first K proposals are GT proposals
             try:
                 box_num_list = [len(x.gt_boxes) for x in proposals]
-                gt_num_list = [torch.unique(x.gt_boxes.tensor[:100], dim=0).size()[0] for x in proposals]
-            except:
+                gt_num_list = [
+                    torch.unique(x.gt_boxes.tensor[:100], dim=0).size()[0]
+                    for x in proposals
+                ]
+            except Exception:
                 box_num_list = [0 for _ in proposals]
                 gt_num_list = [0 for _ in proposals]
                 no_gt_found = True
@@ -834,12 +870,19 @@ class CustomStandardROIHeads(ROIHeads):
             # NOTE: maximum overlapping with GT (IoU)
             predictions_delta = predictions[1]
             proposal_boxes = Boxes.cat([x.proposal_boxes for x in proposals])
-            predictions_bbox = self.box2box_transform.apply_deltas(predictions_delta, proposal_boxes.tensor)
+            predictions_bbox = self.box2box_transform.apply_deltas(
+                predictions_delta, proposal_boxes.tensor
+            )
             idx_start = 0
             iou_max_list = []
             for idx, x in enumerate(proposals):
                 idx_end = idx_start + box_num_list[idx]
-                iou_max_list.append(pairwise_iou_max_scores(predictions_bbox[idx_start:idx_end], x.gt_boxes[:gt_num_list[idx]].tensor))
+                iou_max_list.append(
+                    pairwise_iou_max_scores(
+                        predictions_bbox[idx_start:idx_end],
+                        x.gt_boxes[: gt_num_list[idx]].tensor,
+                    )
+                )
                 idx_start = idx_end
             iou_max = torch.cat(iou_max_list, dim=0)
 
@@ -849,22 +892,28 @@ class CustomStandardROIHeads(ROIHeads):
             if self.use_droploss and not no_gt_found:
                 weights = iou_max.le(self.droploss_iou_thresh).float()
                 weights = 1 - weights.ge(1.0).float()
-                losses = self.box_predictor.losses(predictions, proposals, weights=weights.detach())
+                losses = self.box_predictor.losses(
+                    predictions, proposals, weights=weights.detach()
+                )
             else:
                 losses = self.box_predictor.losses(predictions, proposals)
-            if self.train_on_pred_boxes: # default is false
+            if self.train_on_pred_boxes:  # default is false
                 with torch.no_grad():
                     pred_boxes = self.box_predictor.predict_boxes_for_gt_classes(
                         predictions, proposals
                     )
-                    for proposals_per_image, pred_boxes_per_image in zip(proposals, pred_boxes):
+                    for proposals_per_image, pred_boxes_per_image in zip(
+                        proposals, pred_boxes
+                    ):
                         proposals_per_image.proposal_boxes = Boxes(pred_boxes_per_image)
             return losses
         else:
             pred_instances, _ = self.box_predictor.inference(predictions, proposals)
             return pred_instances
 
-    def _forward_mask(self, features: Dict[str, torch.Tensor], instances: List[Instances]):
+    def _forward_mask(
+        self, features: Dict[str, torch.Tensor], instances: List[Instances]
+    ):
         """
         Forward logic of the mask prediction branch.
 
@@ -888,13 +937,17 @@ class CustomStandardROIHeads(ROIHeads):
 
         if self.mask_pooler is not None:
             features = [features[f] for f in self.mask_in_features]
-            boxes = [x.proposal_boxes if self.training else x.pred_boxes for x in instances]
+            boxes = [
+                x.proposal_boxes if self.training else x.pred_boxes for x in instances
+            ]
             features = self.mask_pooler(features, boxes)
         else:
             features = {f: features[f] for f in self.mask_in_features}
         return self.mask_head(features, instances)
 
-    def _forward_keypoint(self, features: Dict[str, torch.Tensor], instances: List[Instances]):
+    def _forward_keypoint(
+        self, features: Dict[str, torch.Tensor], instances: List[Instances]
+    ):
         """
         Forward logic of the keypoint prediction branch.
 
@@ -919,7 +972,9 @@ class CustomStandardROIHeads(ROIHeads):
 
         if self.keypoint_pooler is not None:
             features = [features[f] for f in self.keypoint_in_features]
-            boxes = [x.proposal_boxes if self.training else x.pred_boxes for x in instances]
+            boxes = [
+                x.proposal_boxes if self.training else x.pred_boxes for x in instances
+            ]
             features = self.keypoint_pooler(features, boxes)
         else:
             features = {f: features[f] for f in self.keypoint_in_features}

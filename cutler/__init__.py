@@ -5,7 +5,7 @@ import engine
 import modeling
 import structures
 import tools
-import demo 
+import demo
 
 # dataset loading
 from . import data  # register all new datasets

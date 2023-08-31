@@ -4,7 +4,7 @@
 ## Requirements
 - Linux or macOS with Python ≥ 3.8
 - PyTorch ≥ 1.8 and [torchvision](https://github.com/pytorch/vision/) that matches the PyTorch installation.
-  Install them together at [pytorch.org](https://pytorch.org) to make sure of this. 
+  Install them together at [pytorch.org](https://pytorch.org) to make sure of this.
   Note, please check PyTorch version matches that is required by Detectron2.
 - Detectron2: follow Detectron2 installation instructions.
 - OpenCV ≥ 4.6 is needed by demo and visualization.

@@ -119,3 +119,16 @@ venv.bak/
 
 # mkdocs documentation
 /site
+
+# data
+*.json
+*.jpg
+*.png
+*.mp4
+*.avi
+
+# model
+*.pth
+
+# output
+cutler/output

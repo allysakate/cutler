@@ -42,8 +42,9 @@ from detectron2.evaluation import (
 )
 from evaluation import COCOEvaluator
 from detectron2.modeling import GeneralizedRCNNWithTTA
-import data # register new datasets
+import data  # register new datasets
 import modeling.roi_heads
+
 
 def build_evaluator(cfg, dataset_name, output_folder=None):
     """
@@ -60,12 +61,16 @@ def build_evaluator(cfg, dataset_name, output_folder=None):
         evaluator_list.append(
             SemSegEvaluator(
                 dataset_name,
-                distributed=True,
+                distributed=False,
                 output_dir=output_folder,
             )
         )
     if evaluator_type in ["coco", "coco_panoptic_seg"]:
-        evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder, no_segm=cfg.TEST.NO_SEGM))
+        evaluator_list.append(
+            COCOEvaluator(
+                dataset_name, output_dir=output_folder, no_segm=cfg.TEST.NO_SEGM
+            )
+        )
     if evaluator_type == "coco_panoptic_seg":
         evaluator_list.append(COCOPanopticEvaluator(dataset_name, output_folder))
     if evaluator_type == "cityscapes_instance":
@@ -78,11 +83,14 @@ def build_evaluator(cfg, dataset_name, output_folder=None):
         return LVISEvaluator(dataset_name, output_dir=output_folder)
     if len(evaluator_list) == 0:
         raise NotImplementedError(
-            "no Evaluator for the dataset {} with the type {}".format(dataset_name, evaluator_type)
+            "no Evaluator for the dataset {} with the type {}".format(
+                dataset_name, evaluator_type
+            )
         )
     elif len(evaluator_list) == 1:
         return evaluator_list[0]
     return DatasetEvaluators(evaluator_list)
+
 
 class Trainer(DefaultTrainer):
     """
@@ -123,8 +131,10 @@ def setup(args):
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     # FIXME: brute force changes to test datasets and evaluation tasks
-    if args.test_dataset != "": cfg.DATASETS.TEST = ((args.test_dataset),)
-    if args.train_dataset != "": cfg.DATASETS.TRAIN = ((args.train_dataset),)
+    if args.test_dataset != "":
+        cfg.DATASETS.TEST = ((args.test_dataset),)
+    if args.train_dataset != "":
+        cfg.DATASETS.TRAIN = ((args.train_dataset),)
     cfg.TEST.NO_SEGM = args.no_segm
     cfg.freeze()
     default_setup(cfg, args)

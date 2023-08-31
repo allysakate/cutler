@@ -8,10 +8,11 @@ import torch
 
 from detectron2.data import MetadataCatalog
 import sys
-sys.path.append('./')
-from engine.defaults import DefaultPredictor
-from detectron2.utils.video_visualizer import VideoVisualizer
-from detectron2.utils.visualizer import ColorMode, Visualizer
+
+sys.path.append("./")
+from engine.defaults import DefaultPredictor  # noqa
+from detectron2.utils.video_visualizer import VideoVisualizer  # noqa
+from detectron2.utils.visualizer import ColorMode, Visualizer  # noqa
 
 
 class VisualizationDemo(object):
@@ -94,7 +95,9 @@ class VisualizationDemo(object):
                 )
             elif "instances" in predictions:
                 predictions = predictions["instances"].to(self.cpu_device)
-                vis_frame = video_visualizer.draw_instance_predictions(frame, predictions)
+                vis_frame = video_visualizer.draw_instance_predictions(
+                    frame, predictions
+                )
             elif "sem_seg" in predictions:
                 vis_frame = video_visualizer.draw_sem_seg(
                     frame, predictions["sem_seg"].argmax(dim=0).to(self.cpu_device)

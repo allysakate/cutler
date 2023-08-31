@@ -1,6 +1,5 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 
-from detectron2.config import CfgNode as CN
 
 def add_cutler_config(cfg):
     cfg.DATALOADER.COPY_PASTE = False

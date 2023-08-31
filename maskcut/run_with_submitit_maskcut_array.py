@@ -3,49 +3,70 @@
 """
 A script to run multinode training with submitit.
 """
-
-import sys
-sys.path.append('./')
-sys.path.append('./MaskCut')
-sys.path.append('./third_party')
-
-import argparse
 import os
+import sys
 import uuid
+import copy
+import argparse
 from pathlib import Path
 
-import maskcut_with_submitit as main_func
-import submitit
-import copy
+sys.path.append("./")
+sys.path.append("./MaskCut")
+sys.path.append("./third_party")
+
+import maskcut_with_submitit as main_func  # noqa
+import submitit  # noqa
+
 
 def parse_args():
     parent_parser = main_func.get_args_parser()
     parser = argparse.ArgumentParser("Submitit for MaskCut", parents=[parent_parser])
-    parser.add_argument("--ngpus", default=1, type=int, help="Number of gpus to request on each node")
-    parser.add_argument("--nodes", default=1, type=int, help="Number of nodes to request")
+    parser.add_argument(
+        "--ngpus", default=1, type=int, help="Number of gpus to request on each node"
+    )
+    parser.add_argument(
+        "--nodes", default=1, type=int, help="Number of nodes to request"
+    )
     parser.add_argument("--timeout", default=1400, type=int, help="Duration of the job")
-    parser.add_argument("--job_dir", default="", type=str, help="Job dir. Leave empty for automatic.")
+    parser.add_argument(
+        "--job_dir", default="", type=str, help="Job dir. Leave empty for automatic."
+    )
 
-    parser.add_argument("--partition", default="learnfair", type=str, help="Partition where to submit")
-    parser.add_argument("--use_volta32", action='store_true', help="Big models? Use this")
-    parser.add_argument('--comment', default="", type=str,
-                        help='Comment to pass to scheduler, e.g. priority message')
+    parser.add_argument(
+        "--partition", default="learnfair", type=str, help="Partition where to submit"
+    )
+    parser.add_argument(
+        "--use_volta32", action="store_true", help="Big models? Use this"
+    )
+    parser.add_argument(
+        "--comment",
+        default="",
+        type=str,
+        help="Comment to pass to scheduler, e.g. priority message",
+    )
 
     # Removed the followings if the main file has it already
     # distributed training parameters
-    parser.add_argument('--world_size', default=1, type=int,
-                        help='number of distributed processes')
-    parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
-    parser.add_argument('--output_dir', default='',
-                    help='path where to save, empty for no saving')
-    parser.add_argument('--device', default='cuda',
-                        help='device to use for training / testing')
-    parser.add_argument('--seed', default=0, type=int)
-    parser.add_argument('--gpu', default=0, type=int)
-    parser.add_argument('--rank', default=0, type=int)
-    parser.add_argument('--resume', default='', help='resume from checkpoint')
-    parser.add_argument('--tolerance', default=1, type=int, help='tolerance for finding contours')
-    
+    parser.add_argument(
+        "--world_size", default=1, type=int, help="number of distributed processes"
+    )
+    parser.add_argument(
+        "--dist_url", default="env://", help="url used to set up distributed training"
+    )
+    parser.add_argument(
+        "--output_dir", default="", help="path where to save, empty for no saving"
+    )
+    parser.add_argument(
+        "--device", default="cuda", help="device to use for training / testing"
+    )
+    parser.add_argument("--seed", default=0, type=int)
+    parser.add_argument("--gpu", default=0, type=int)
+    parser.add_argument("--rank", default=0, type=int)
+    parser.add_argument("--resume", default="", help="resume from checkpoint")
+    parser.add_argument(
+        "--tolerance", default=1, type=int, help="tolerance for finding contours"
+    )
+
     return parser.parse_args()
 
 
@@ -65,6 +86,7 @@ def get_init_file():
     if init_file.exists():
         os.remove(str(init_file))
     return init_file
+
 
 # Using a for loop for getting the array job and submit all jobs in one single array
 class Trainer(object):
@@ -94,7 +116,9 @@ class Trainer(object):
         from pathlib import Path
 
         job_env = submitit.JobEnvironment()
-        self.args.output_dir = Path(str(self.args.output_dir).replace("%j", str(job_env.job_id)))
+        self.args.output_dir = Path(
+            str(self.args.output_dir).replace("%j", str(job_env.job_id))
+        )
         self.args.gpu = job_env.local_rank
         self.args.rank = job_env.global_rank
         self.args.world_size = job_env.num_tasks
@@ -116,26 +140,26 @@ def main():
     partition = args.partition
     kwargs = {}
     if args.use_volta32:
-        kwargs['slurm_constraint'] = 'volta32gb'
+        kwargs["slurm_constraint"] = "volta32gb"
     if args.comment:
-        kwargs['slurm_comment'] = args.comment
+        kwargs["slurm_comment"] = args.comment
 
     executor.update_parameters(
-        mem_gb=40 * num_gpus_per_node, # 40
+        mem_gb=40 * num_gpus_per_node,  # 40
         gpus_per_node=num_gpus_per_node,
         tasks_per_node=num_gpus_per_node,  # one task per GPU
-        cpus_per_task=8, # default 8
+        cpus_per_task=8,  # default 8
         nodes=nodes,
         timeout_min=timeout_min,  # max is 60 * 72
         # Below are cluster dependent parameters
         slurm_partition=partition,
         slurm_signal_delay_s=120,
-        **kwargs
+        **kwargs,
     )
 
     executor.update_parameters(name="MaskCut")
 
-    # Since it is often necessary to submit over 100 jobs simutanously, 
+    # Since it is often necessary to submit over 100 jobs simutanously,
     # using an array to submit these jobs is a more efficient way.
     args.dist_url = get_init_file().as_uri()
     args.output_dir = args.job_dir

@@ -1,5 +1,6 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
-# Modified by XuDong Wang from https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/roi_heads/cascade_rcnn.py
+# Modified by XuDong Wang from
+# https://github.com/facebookresearch/detectron2/blob/main/detectron2/modeling/roi_heads/cascade_rcnn.py
 
 from typing import List
 import torch
@@ -21,6 +22,7 @@ from .fast_rcnn import FastRCNNOutputLayers, fast_rcnn_inference
 from .roi_heads import ROI_HEADS_REGISTRY, CustomStandardROIHeads
 
 import torch.nn.functional as F
+
 
 class _ScaleGradient(Function):
     @staticmethod
@@ -71,8 +73,12 @@ class CustomCascadeROIHeads(CustomStandardROIHeads):
         num_stages = self.num_cascade_stages = len(box_heads)
         box_heads = nn.ModuleList(box_heads)
         box_predictors = nn.ModuleList(box_predictors)
-        assert len(box_predictors) == num_stages, f"{len(box_predictors)} != {num_stages}!"
-        assert len(proposal_matchers) == num_stages, f"{len(proposal_matchers)} != {num_stages}!"
+        assert (
+            len(box_predictors) == num_stages
+        ), f"{len(box_predictors)} != {num_stages}!"
+        assert (
+            len(proposal_matchers) == num_stages
+        ), f"{len(proposal_matchers)} != {num_stages}!"
         super().__init__(
             box_in_features=box_in_features,
             box_pooler=box_pooler,
@@ -130,7 +136,9 @@ class CustomCascadeROIHeads(CustomStandardROIHeads):
                     box2box_transform=Box2BoxTransform(weights=bbox_reg_weights),
                 )
             )
-            proposal_matchers.append(Matcher([match_iou], [0, 1], allow_low_quality_matches=False))
+            proposal_matchers.append(
+                Matcher([match_iou], [0, 1], allow_low_quality_matches=False)
+            )
         return {
             "box_in_features": in_features,
             "box_pooler": box_pooler,
@@ -173,11 +181,15 @@ class CustomCascadeROIHeads(CustomStandardROIHeads):
             if k > 0:
                 # The output boxes of the previous stage are used to create the input
                 # proposals of the next stage.
-                proposals = self._create_proposals_from_boxes(prev_pred_boxes, image_sizes)
+                proposals = self._create_proposals_from_boxes(
+                    prev_pred_boxes, image_sizes
+                )
                 if self.training:
                     proposals = self._match_and_label_boxes(proposals, k, targets)
             predictions = self._run_stage(features, proposals, k)
-            prev_pred_boxes = self.box_predictor[k].predict_boxes(predictions, proposals)
+            prev_pred_boxes = self.box_predictor[k].predict_boxes(
+                predictions, proposals
+            )
             head_outputs.append((self.box_predictor[k], predictions, proposals))
 
         no_gt_found = False
@@ -190,37 +202,56 @@ class CustomCascadeROIHeads(CustomStandardROIHeads):
                     if self.use_droploss:
                         try:
                             box_num_list = [len(x.gt_boxes) for x in proposals]
-                            gt_num_list = [torch.unique(x.gt_boxes.tensor[:100], dim=0).size()[0] for x in proposals]
-                        except:
+                            gt_num_list = [
+                                torch.unique(x.gt_boxes.tensor[:100], dim=0).size()[0]
+                                for x in proposals
+                            ]
+                        except Exception:
                             box_num_list = [0 for x in proposals]
                             gt_num_list = [0 for x in proposals]
                             no_gt_found = True
 
                         if not no_gt_found:
                             # NOTE: confidence score
-                            prediction_score, predictions_delta = predictions[0], predictions[1]
-                            prediction_score = F.softmax(prediction_score, dim=1)[:,0]
+                            prediction_score, predictions_delta = (
+                                predictions[0],
+                                predictions[1],
+                            )
+                            prediction_score = F.softmax(prediction_score, dim=1)[:, 0]
 
                             # NOTE: maximum overlapping with GT (IoU)
-                            proposal_boxes = Boxes.cat([x.proposal_boxes for x in proposals])
-                            predictions_bbox = predictor.box2box_transform.apply_deltas(predictions_delta, proposal_boxes.tensor)
+                            proposal_boxes = Boxes.cat(
+                                [x.proposal_boxes for x in proposals]
+                            )
+                            predictions_bbox = predictor.box2box_transform.apply_deltas(
+                                predictions_delta, proposal_boxes.tensor
+                            )
                             idx_start = 0
                             iou_max_list = []
                             for idx, x in enumerate(proposals):
                                 idx_end = idx_start + box_num_list[idx]
-                                iou_max_list.append(pairwise_iou_max_scores(predictions_bbox[idx_start:idx_end], x.gt_boxes[:gt_num_list[idx]].tensor))
+                                iou_max_list.append(
+                                    pairwise_iou_max_scores(
+                                        predictions_bbox[idx_start:idx_end],
+                                        x.gt_boxes[: gt_num_list[idx]].tensor,
+                                    )
+                                )
                                 idx_start = idx_end
                             iou_max = torch.cat(iou_max_list, dim=0)
 
                             # NOTE: get the weight of each proposal
                             weights = iou_max.le(self.droploss_iou_thresh).float()
                             weights = 1 - weights.ge(1.0).float()
-                            stage_losses = predictor.losses(predictions, proposals, weights=weights.detach())
+                            stage_losses = predictor.losses(
+                                predictions, proposals, weights=weights.detach()
+                            )
                         else:
                             stage_losses = predictor.losses(predictions, proposals)
                     else:
                         stage_losses = predictor.losses(predictions, proposals)
-                losses.update({k + "_stage{}".format(stage): v for k, v in stage_losses.items()})
+                losses.update(
+                    {k + "_stage{}".format(stage): v for k, v in stage_losses.items()}
+                )
             return losses
         else:
             # Each is a list[Tensor] of length #image. Each tensor is Ri x (K+1)
@@ -265,7 +296,9 @@ class CustomCascadeROIHeads(CustomStandardROIHeads):
                 targets_per_image.gt_boxes, proposals_per_image.proposal_boxes
             )
             # proposal_labels are 0 or 1
-            matched_idxs, proposal_labels = self.proposal_matchers[stage](match_quality_matrix)
+            matched_idxs, proposal_labels = self.proposal_matchers[stage](
+                match_quality_matrix
+            )
             if len(targets_per_image) > 0:
                 gt_classes = targets_per_image.gt_classes[matched_idxs]
                 # Label unmatched proposals (0 label from matcher) as background (label=num_classes)
@@ -274,7 +307,9 @@ class CustomCascadeROIHeads(CustomStandardROIHeads):
             else:
                 gt_classes = torch.zeros_like(matched_idxs) + self.num_classes
                 gt_boxes = Boxes(
-                    targets_per_image.gt_boxes.tensor.new_zeros((len(proposals_per_image), 4))
+                    targets_per_image.gt_boxes.tensor.new_zeros(
+                        (len(proposals_per_image), 4)
+                    )
                 )
             proposals_per_image.gt_classes = gt_classes
             proposals_per_image.gt_boxes = gt_boxes
@@ -310,7 +345,9 @@ class CustomCascadeROIHeads(CustomStandardROIHeads):
         # This is equivalent to adding the losses among heads,
         # but scale down the gradients on features.
         if self.training:
-            box_features = _ScaleGradient.apply(box_features, 1.0 / self.num_cascade_stages)
+            box_features = _ScaleGradient.apply(
+                box_features, 1.0 / self.num_cascade_stages
+            )
         box_features = self.box_head[stage](box_features)
         return self.box_predictor[stage](box_features)
 

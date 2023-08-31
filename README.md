@@ -5,9 +5,9 @@ It outperforms previous SOTA by **2.7 times** for AP50 and **2.6 times** for AR 
 
 <p align="center"> <img src='docs/teaser_img.jpg' align="center" > </p>
 
-> [**Cut and Learn for Unsupervised Object Detection and Instance Segmentation**](http://people.eecs.berkeley.edu/~xdwang/projects/CutLER/)            
-> [Xudong Wang](https://people.eecs.berkeley.edu/~xdwang/), [Rohit Girdhar](https://rohitgirdhar.github.io/), [Stella X. Yu](https://www1.icsi.berkeley.edu/~stellayu/), [Ishan Misra](https://imisra.github.io/)     
-> FAIR, Meta AI and UC Berkeley            
+> [**Cut and Learn for Unsupervised Object Detection and Instance Segmentation**](http://people.eecs.berkeley.edu/~xdwang/projects/CutLER/)
+> [Xudong Wang](https://people.eecs.berkeley.edu/~xdwang/), [Rohit Girdhar](https://rohitgirdhar.github.io/), [Stella X. Yu](https://www1.icsi.berkeley.edu/~stellayu/), [Ishan Misra](https://imisra.github.io/)
+> FAIR, Meta AI and UC Berkeley
 > CVPR 2023
 
 [project page](http://people.eecs.berkeley.edu/~xdwang/projects/CutLER/) | [arxiv](https://arxiv.org/abs/2301.11320) | [colab](https://colab.research.google.com/drive/1NgEyFHvOfuA2MZZnfNPWg1w5gSr3HOBb?usp=sharing) | [bibtex](#citation)
@@ -54,7 +54,7 @@ python demo.py --img-path imgs/demo2.jpg \
   --N 3 --tau 0.15 --vit-arch base --patch-size 8 \
   [--other-options]
 ```
-We give a few demo images in maskcut/imgs/. If you want to run demo.py with cpu, simply add "--cpu" when running the demo script. 
+We give a few demo images in maskcut/imgs/. If you want to run demo.py with cpu, simply add "--cpu" when running the demo script.
 For imgs/demo4.jpg, you need to use "--N 6" to segment all six instances in the image.
 Following, we give some visualizations of the pseudo-masks on the demo images.
 <p align="center">
@@ -82,7 +82,7 @@ python merge_jsons.py \
 ```
 The "--num-folder-per-job", "--fixed-size", "--tau" and "--N" of merge_jsons.py should match the ones used to run maskcut.py.
 
-We also provide a submitit script to launch the pseudo-mask generation process with multiple nodes. 
+We also provide a submitit script to launch the pseudo-mask generation process with multiple nodes.
 ```
 cd maskcut
 bash run_maskcut_with_submitit.sh
@@ -97,7 +97,7 @@ Try out the CutLER demo using Colab (no GPU needed): [![Open In Colab](https://c
 Try out the web demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/facebook/CutLER) (thanks to [@hysts](https://github.com/hysts)!)
 
 
-Try out Replicate demo and the API: [![Replicate](https://replicate.com/cjwbw/cutler/badge)](https://replicate.com/cjwbw/cutler) 
+Try out Replicate demo and the API: [![Replicate](https://replicate.com/cjwbw/cutler/badge)](https://replicate.com/cjwbw/cutler)
 
 
 If you want to run CutLER demos locally,
@@ -202,7 +202,7 @@ bash tools/eval.sh
 ```
 
 ### Model Zoo
-We show zero-shot unsupervised object detection performance (AP50&nbsp;|&nbsp;AR) on 11 different datasets spanning a variety of domains. ^: CutLER using Mask R-CNN as a detector; *: CutLER using Cascade Mask R-CNN as a detector. 
+We show zero-shot unsupervised object detection performance (AP50&nbsp;|&nbsp;AR) on 11 different datasets spanning a variety of domains. ^: CutLER using Mask R-CNN as a detector; *: CutLER using Cascade Mask R-CNN as a detector.
 <table><tbody>
 <!-- START TABLE -->
 <!-- TABLE HEADER -->
@@ -367,7 +367,7 @@ CutLER's wide range of detection capabilities may introduce similar challenges t
 As the image can contain arbitrary instances, it may impact the model output.
 
 ## How to get support from us?
-If you have any general questions, feel free to email us at [Xudong Wang](mailto:xdwang@eecs.berkeley.edu), [Ishan Misra](mailto:imisra@meta.com) and [Rohit Girdhar](mailto:rgirdhar@meta.com). If you have code or implementation-related questions, please feel free to send emails to us or open an issue in this codebase (We recommend that you open an issue in this codebase, because your questions may help others). 
+If you have any general questions, feel free to email us at [Xudong Wang](mailto:xdwang@eecs.berkeley.edu), [Ishan Misra](mailto:imisra@meta.com) and [Rohit Girdhar](mailto:rgirdhar@meta.com). If you have code or implementation-related questions, please feel free to send emails to us or open an issue in this codebase (We recommend that you open an issue in this codebase, because your questions may help others).
 
 ## Citation
 If you find our work inspiring or use our codebase in your research, please consider giving a star ⭐ and a citation.
