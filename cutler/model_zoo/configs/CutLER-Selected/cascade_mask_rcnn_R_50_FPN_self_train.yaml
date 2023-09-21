@@ -31,10 +31,11 @@ MODEL:
     USE_DROPLOSS: False
     DROPLOSS_IOU_THRESH: 0.01
 DATASETS:
-  TRAIN: ("imagenet_train_r1",) # round 1
+  TRAIN: ("cls_selectedcoco2017_r1",) # round 1
+  TEST: ("cls_selectedcoco2017",) #cls_selectedcoco_val2017
   # TRAIN: ("imagenet_train_r2",) # round 2
 SOLVER:
-  IMS_PER_BATCH: 16
+  IMS_PER_BATCH: 2
   BASE_LR: 0.005
   STEPS: (79999,)
   MAX_ITER: 80000

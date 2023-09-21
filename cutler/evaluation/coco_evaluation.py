@@ -34,6 +34,26 @@ except ImportError:
     COCOeval_opt = COCOeval
 
 
+def chunk_save(data, output_dir):
+    num_chunk = 25
+    chunk_size = len(data) // num_chunk
+    for chunk_id in range(num_chunk):
+        start_idx = chunk_id * chunk_size
+        end_idx = (chunk_id + 1) * chunk_size if chunk_id < num_chunk - 1 else len(data)
+        annotations = []
+        for ann_idx in range(start_idx, end_idx + 1):
+            try:
+                ann_dict = data[ann_idx]
+                annotations.append(ann_dict)
+            except Exception:
+                print(f"Last annotation: {ann_idx}")
+        data_path = os.path.join(output_dir, f"coco_instances_{chunk_id}.json")
+        print("INFO: ", data_path)
+        with PathManager.open(data_path, "w") as f:
+            f.write(json.dumps(annotations))
+            f.flush()
+
+
 class COCOEvaluator(DatasetEvaluator):
     """
     Evaluate AR for object proposals, AP for instance detection/segmentation, AP
@@ -261,11 +281,8 @@ class COCOEvaluator(DatasetEvaluator):
                 result["category_id"] = reverse_id_mapping[category_id]
 
         if self._output_dir:
-            file_path = os.path.join(self._output_dir, "coco_instances_results.json")
-            self._logger.info("Saving results to {}".format(file_path))
-            with PathManager.open(file_path, "w") as f:
-                f.write(json.dumps(coco_results))
-                f.flush()
+            chunk_save(coco_results, self._output_dir)
+            self._logger.info(f"Saving results to {self._output_dir}")
 
         if not self._do_evaluation:
             self._logger.info("Annotations are not available for evaluation.")
