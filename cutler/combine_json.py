@@ -2,7 +2,7 @@ import os
 import json
 from detectron2.utils.file_io import PathManager
 
-BASE_DIR = "/home/kate.brillantes/thesis/cutler/cutler/output/inference"
+BASE_DIR = "/home/kate.brillantes/thesis/cutler/cutler/output/self-train-r1/inference"
 
 # Load info.json
 

@@ -96,6 +96,11 @@ _PREDEFINED_SPLITS_COCO_CA["coco_cls_agnostic"] = {
         "selected_cvat2023",
         "selected_cvat2023/annotations/cutler_selectedcvat_train_r2.json",
     ),
+    # self-training round 2
+    "cls_selectedcoco2017_r2": (
+        "selected_coco2017",
+        "selected_coco2017/annotations/cutler_selectedcoco_train_r2.json",
+    ),
 }
 
 _PREDEFINED_SPLITS_IMAGENET = {}
