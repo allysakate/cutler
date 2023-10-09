@@ -33,8 +33,8 @@ MODEL:
     POST_NMS_TOPK_TRAIN: 4000
     NMS_THRESH: 0.65
 DATASETS:
-  TRAIN: ("cls_selectedcoco2017",)
-  TEST: ("cls_selectedcoco2017",) #cls_selectedcoco_val2017, cls_selectedcoco2017
+  TRAIN: ("cls_selectedcvat_train2023",)
+  TEST: ("cls_selectedcvat_train2023",) #cls_selectedcoco_val2017, cls_selectedcoco2017
 SOLVER:
   IMS_PER_BATCH: 16
   BASE_LR: 0.01

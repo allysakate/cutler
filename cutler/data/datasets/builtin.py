@@ -78,18 +78,23 @@ _PREDEFINED_SPLITS_COCO_CA["coco_cls_agnostic"] = {
         "coco/train2014",
         "coco/annotations/coco20k_trainval_gt.json",
     ),
-    "cls_selectedcoco2017": (
-        "selected_coco2017",
-        "selected_coco2017/annotations/selectedcoco_train_fixsize480_tau0.15_N3_0_3.json",
+    "cls_selectedcvat_train2023": (
+        "selected_cvat2023",
+        "selected_cvat2023/annotations/selected_train.json",
     ),
-    "cls_selectedcoco_val2017": (
-        "selected_coco2017/selected_val2017",
-        "selected_coco2017/annotations/selected_instances_val2017.json",
+    "cls_selectedcvat_val2023": (
+        "selected_cvat2023/selected_val2017",
+        "selected_cvat2023/annotations/selected_val.json",
     ),
     # self-training round 1
-    "cls_selectedcoco2017_r1": (
-        "selected_coco2017",
-        "selected_coco2017/annotations/cutler_selectedcoco_train_r1.json",
+    "cls_selectedcvat2023_r1": (
+        "selected_cvat2023",
+        "selected_cvat2023/annotations/cutler_selectedcvat_train_r1.json",
+    ),
+    # self-training round 2
+    "cls_selectedcvat2023_r2": (
+        "selected_cvat2023",
+        "selected_cvat2023/annotations/cutler_selectedcvat_train_r2.json",
     ),
 }
 

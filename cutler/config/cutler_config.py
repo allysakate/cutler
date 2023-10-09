@@ -1,5 +1,10 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 
+class Parameters:
+    def __init__(self, config_dict):
+        for key, value in config_dict.items():
+            setattr(self, key, value)
+
 
 def add_cutler_config(cfg):
     cfg.DATALOADER.COPY_PASTE = False
