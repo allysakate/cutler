@@ -68,19 +68,12 @@ _PREDEFINED_SPLITS_COCO_SEMI["coco_semi"] = {
     ),
 }
 
-_PREDEFINED_SPLITS_COCO_CA = {}
-_PREDEFINED_SPLITS_COCO_CA["coco_cls_agnostic"] = {
-    "cls_agnostic_coco": (
-        "coco/val2017",
-        "coco/annotations/coco_cls_agnostic_instances_val2017.json",
-    ),
-    "cls_agnostic_coco20k": (
-        "coco/train2014",
-        "coco/annotations/coco20k_trainval_gt.json",
-    ),
-    "cls_selectedcvat_train2023": (
-        "selected_cvat2023",
-        "selected_cvat2023/annotations/selected_train.json",
+
+_PREDEFINED_SPLITS_COCO_CVAT = {}
+_PREDEFINED_SPLITS_COCO_CVAT["coco_cvat"] = {
+    "cls_selectedcoco2017": (
+        "selected_coco2017",
+        "selected_coco2017/annotations/selectedcoco_train_fixsize480_tau0.15_N3_0_3.json",
     ),
     "cls_selectedcvat_val2023": (
         "selected_cvat2023/selected_val2017",
@@ -100,6 +93,37 @@ _PREDEFINED_SPLITS_COCO_CA["coco_cls_agnostic"] = {
     "cls_selectedcoco2017_r2": (
         "selected_coco2017",
         "selected_coco2017/annotations/cutler_selectedcoco_train_r2.json",
+    ),
+    "cls_selectedcvat_train2023": (
+        "selected_cvat2023/cvat_train2023",
+        "selected_cvat2023/annotations/selected_train.json",
+    ),
+    "cls_selectedcvat_val2023": (
+        "selected_cvat2023/cvat_val2023",
+        "selected_cvat2023/annotations/selected_val.json",
+    ),
+    # self-training round 1
+    "cls_selectedcvat2023_r1": (
+        "selected_cvat2023/cvat_train2023",
+        "selected_cvat2023/annotations/cutler_selectedcvat_train_r1.json",
+    ),
+    # self-training round 2
+    "cls_selectedcvat2023_r2": (
+        "selected_cvat2023/cvat_train2023",
+        "selected_cvat2023/annotations/cutler_selectedcvat_train_r2.json",
+    ),
+}
+
+
+_PREDEFINED_SPLITS_COCO_CA = {}
+_PREDEFINED_SPLITS_COCO_CA["coco_cls_agnostic"] = {
+    "cls_agnostic_coco": (
+        "coco/val2017",
+        "coco/annotations/coco_cls_agnostic_instances_val2017.json",
+    ),
+    "cls_agnostic_coco20k": (
+        "coco/train2014",
+        "coco/annotations/coco20k_trainval_gt.json",
     ),
 }
 
@@ -303,9 +327,22 @@ def register_all_coco_ca(root):
             )
 
 
+def register_all_coco_cvat(root):
+    for dataset_name, splits_per_dataset in _PREDEFINED_SPLITS_COCO_CVAT.items():
+        for key, (image_root, json_file) in splits_per_dataset.items():
+            # Assume pre-defined datasets live in `./datasets`.
+            register_coco_instances(
+                key,
+                _get_builtin_metadata(dataset_name),
+                os.path.join(root, json_file) if "://" not in json_file else json_file,
+                os.path.join(root, image_root),
+            )
+
+
 _root = os.path.expanduser(os.getenv("DETECTRON2_DATASETS", "datasets"))
 register_all_coco_semi(_root)
 register_all_coco_ca(_root)
+register_all_coco_cvat(_root)
 register_all_imagenet(_root)
 register_all_uvo(_root)
 register_all_voc(_root)

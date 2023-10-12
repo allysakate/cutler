@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.tfevents.*
 
 # C extensions
 *.so
@@ -131,4 +132,6 @@ venv.bak/
 *.pth
 
 # output
-cutler/output
+**/last_checkpoint
+**/log.txt
+**/config.yaml

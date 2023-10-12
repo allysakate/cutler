@@ -15,6 +15,20 @@ COCO model (with correct class names and colors).
 """
 
 
+CVAT_CATEGORIES = [
+    # {"color": [254, 254, 51], "isthing": 1, "id": 1, "name": "person"},
+    {"color": [2, 71, 254], "isthing": 1, "id": 1, "name": "bicycle"},
+    {"color": [254, 39, 18], "isthing": 1, "id": 2, "name": "car"},
+    {"color": [140, 120, 240], "isthing": 1, "id": 3, "name": "jeepney"},
+    {"color": [134, 1, 175], "isthing": 1, "id": 4, "name": "tricycle"},
+    {"color": [102, 176, 50], "isthing": 1, "id": 5, "name": "motorcycle"},
+    {"color": [202, 253, 0], "isthing": 1, "id": 6, "name": "taxi"},
+    {"color": [252, 96, 10], "isthing": 1, "id": 7, "name": "van"},
+    {"color": [52, 124, 152], "isthing": 1, "id": 8, "name": "pick-up"},
+    {"color": [194, 20, 96], "isthing": 1, "id": 9, "name": "bus"},
+    {"color": [170, 240, 209], "isthing": 1, "id": 10, "name": "truck"},
+    {"color": [128, 128, 128], "isthing": 1, "id": 11, "name": "others"},
+]
 # All coco categories, together with their nice-looking visualization colors
 # It's from https://github.com/cocodataset/panopticapi/blob/master/panoptic_coco_categories.json
 COCO_CATEGORIES = [
@@ -273,6 +287,21 @@ def _get_coco_instances_meta():
     return ret
 
 
+def _get_cvat_instances_meta():
+    thing_ids = [k["id"] for k in CVAT_CATEGORIES if k["isthing"] == 1]
+    thing_colors = [k["color"] for k in CVAT_CATEGORIES if k["isthing"] == 1]
+    assert len(thing_ids) == 11, len(thing_ids)
+    # Mapping from the incontiguous COCO category id to an id in [0, 79]
+    thing_dataset_id_to_contiguous_id = {k: i for i, k in enumerate(thing_ids)}
+    thing_classes = [k["name"] for k in CVAT_CATEGORIES if k["isthing"] == 1]
+    ret = {
+        "thing_dataset_id_to_contiguous_id": thing_dataset_id_to_contiguous_id,
+        "thing_classes": thing_classes,
+        "thing_colors": thing_colors,
+    }
+    return ret
+
+
 def _get_imagenet_instances_meta():
     thing_ids = [k["id"] for k in IMAGENET_CATEGORIES if k["isthing"] == 1]
     thing_colors = [k["color"] for k in IMAGENET_CATEGORIES if k["isthing"] == 1]
@@ -341,7 +370,9 @@ def _get_coco_panoptic_separated_meta():
 def _get_builtin_metadata(dataset_name):
     if dataset_name in ["coco", "coco_semi"]:
         return _get_coco_instances_meta()
-    if dataset_name == "coco_panoptic_separated":
+    if dataset_name == "coco_cvat":
+        return _get_cvat_instances_meta()
+    elif dataset_name == "coco_panoptic_separated":
         return _get_coco_panoptic_separated_meta()
     elif dataset_name in [
         "imagenet",

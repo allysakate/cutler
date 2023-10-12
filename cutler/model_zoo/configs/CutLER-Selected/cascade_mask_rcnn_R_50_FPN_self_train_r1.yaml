@@ -4,13 +4,14 @@ DATALOADER:
   COPY_PASTE_RATE: 1.0
   VISUALIZE_COPY_PASTE: False
   COPY_PASTE_RANDOM_NUM: True
-  COPY_PASTE_MIN_RATIO: 0.3
+  COPY_PASTE_MIN_RATIO: 0.5
   COPY_PASTE_MAX_RATIO: 1.0
-  NUM_WORKERS: 0
+  NUM_WORKERS: 2
 MODEL:
   PIXEL_MEAN: [123.675, 116.280, 103.530]
   PIXEL_STD: [58.395, 57.120, 57.375]
-  WEIGHTS: 'http://dl.fbaipublicfiles.com/cutler/checkpoints/dino_RN50_pretrain_d2_format.pkl'
+  WEIGHTS: 'http://dl.fbaipublicfiles.com/cutler/checkpoints/cutler_cascade_r1.pth' # round 1
+  # WEIGHTS: 'http://dl.fbaipublicfiles.com/cutler/checkpoints/cutler_cascade_r2.pth' # round 2
   MASK_ON: True
   BACKBONE:
     FREEZE_AT: 0
@@ -27,21 +28,18 @@ MODEL:
     NUM_CLASSES: 11
     SCORE_THRESH_TEST: 0.0
     POSITIVE_FRACTION: 0.25
-    USE_DROPLOSS: True
+    USE_DROPLOSS: False
     DROPLOSS_IOU_THRESH: 0.01
-  RPN:
-    POST_NMS_TOPK_TRAIN: 4000
-    NMS_THRESH: 0.65
 DATASETS:
-  TRAIN: ("cls_selectedcvat_train2023",)
-  TEST: ("cls_selectedcvat_train2023",) #cls_selectedcoco_val2017, cls_selectedcoco2017
+  TRAIN: ("cls_selectedcvat2023_r1",) # round 2
+  TEST: ("cls_selectedcvat_train2023",) #cls_selectedcoco_val2017
+  # TRAIN: ("imagenet_train_r2",) # round 2
 SOLVER:
   IMS_PER_BATCH: 2
-  BASE_LR: 0.01
-  WEIGHT_DECAY: 0.00005
-  STEPS: (80000,)
-  MAX_ITER: 160000
-  GAMMA: 0.02
+  BASE_LR: 0.005
+  STEPS: (79999,)
+  MAX_ITER: 80000
+  GAMMA: 1.0
   CLIP_GRADIENTS:
     CLIP_TYPE: norm
     CLIP_VALUE: 1.0
@@ -59,4 +57,5 @@ TEST:
     ENABLED: True
     NUM_ITER: 200
   DETECTIONS_PER_IMAGE: 100
-OUTPUT_DIR: "output_cvat/"
+# OUTPUT_DIR: "output/self-train-r1/" # round 1
+OUTPUT_DIR: "output_cvat/self-train-r1/" # round 2

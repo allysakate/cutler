@@ -2,6 +2,7 @@
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 
 import os
+import numpy as np
 import json
 import tqdm
 import torch
@@ -28,11 +29,17 @@ LICENSES = [
 ]
 
 CATEGORIES = [
-    {
-        "id": 1,
-        "name": "fg",
-        "supercategory": "fg",
-    },
+    {"id": 1, "name": "bicycle", "supercategory": "vehicle"},
+    {"id": 2, "name": "car", "supercategory": "vehicle"},
+    {"id": 3, "name": "jeepney", "supercategory": "vehicle"},
+    {"id": 4, "name": "tricycle", "supercategory": "vehicle"},
+    {"id": 5, "name": "motorcycle", "supercategory": "vehicle"},
+    {"id": 6, "name": "taxi", "supercategory": "vehicle"},
+    {"id": 7, "name": "van", "supercategory": "vehicle"},
+    {"id": 8, "name": "pick-up", "supercategory": "vehicle"},
+    {"id": 9, "name": "bus", "supercategory": "vehicle"},
+    {"id": 10, "name": "truck", "supercategory": "vehicle"},
+    {"id": 11, "name": "others", "supercategory": "vehicle"},
 ]
 
 new_dict_filtered = {
@@ -42,8 +49,6 @@ new_dict_filtered = {
     "images": [],
     "annotations": [],
 }
-
-category_info = {"is_crowd": 0, "id": 1}
 
 
 def segmToRLE(segm, h, w):
@@ -69,6 +74,28 @@ def rle2mask(rle, height, width):
         rle = cocomask.frPyObjects(rle, height, width)
     mask = cocomask.decode(rle)
     return mask
+
+
+def mask2rle(binary_mask):
+    """
+    Checkout: https://cocodataset.org/#format-results
+    :param mask [numpy.ndarray of shape (height, width)]: Decoded 2d segmentation mask
+
+    This function returns the following dictionary:
+    {
+        "counts": encoded mask suggested by the official COCO dataset webpage.
+        "size": the size of the input mask/image
+    }
+    """
+    # Create dictionary for the segmentation key in the COCO dataset
+    rle = {"counts": [], "size": list(binary_mask.shape)}
+    # We need to convert it to a Fortran array
+    binary_mask_fortran = np.asfortranarray(binary_mask)
+    # Encode the mask as specified by the official COCO format
+    encoded_mask = cocomask.encode(binary_mask_fortran)
+    # We must decode the byte encoded string or otherwise we cannot save it as a JSON file
+    rle["counts"] = encoded_mask["counts"].decode()
+    return rle
 
 
 def cocosegm2mask(segm, h, w):
@@ -107,19 +134,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--new-pred",
         type=str,
-        default="output/inference/coco_instances_results.json",
+        default="/home/kate.brillantes/thesis/cutler/cutler/output_cvat/inference/coco_instances_results.json",
         help="Path to model predictions",
     )
     parser.add_argument(
         "--prev-ann",
         type=str,
-        default="DETECTRON2_DATASETS/imagenet/annotations/cutler_imagenet1k_train.json",
+        default="/home/kate.brillantes/thesis/cutler/datasets/selected_cvat2023/annotations/selected_train.json",
         help="Path to annotations in the previous round",
     )
     parser.add_argument(
         "--save-path",
         type=str,
-        default="DETECTRON2_DATASETS/imagenet/annotations/cutler_imagenet1k_train_r1.json",
+        default="/home/kate.brillantes/thesis/cutler/datasets/selected_cvat2023/annotations/cutler_selectedcvat_train_r1.json",
         help="Path to save the generated annotation file",
     )
     # parser.add_argument('--n-rounds', type=int, default=1,
@@ -150,6 +177,11 @@ if __name__ == "__main__":
     pseudo_image_list = pseudo_ann_dict["images"]
     pseudo_annotations = pseudo_ann_dict["annotations"]
 
+    pseudo_img_dict = {}
+    for image in pseudo_image_list:
+        image_id = image["id"]
+        pseudo_img_dict[image_id] = image
+
     pseudo_image_to_anns = {}
     for id, ann in enumerate(pseudo_annotations):
         if ann["image_id"] in pseudo_image_to_anns:
@@ -163,8 +195,11 @@ if __name__ == "__main__":
     for k, anns_pseudo in tqdm.tqdm(pseudo_image_to_anns.items()):
         masks = []
         for ann in anns_pseudo:
+            ann_image_id = ann["image_id"]
             segm = ann["segmentation"]
-            mask = cocosegm2mask(segm, segm["size"][0], segm["size"][1])
+            image = pseudo_img_dict[ann_image_id]
+            mask = cocosegm2mask(segm, image["height"], image["width"])
+            ann["segmentation"] = mask2rle(mask)
             masks.append(torch.from_numpy(mask))
         pseudo_masks = torch.stack(masks, dim=0).cuda()
         del masks
